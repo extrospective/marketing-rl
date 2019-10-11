@@ -33,6 +33,9 @@ class SimpleMarketingEnv(Environment):
         self.S = range(self.cust.get_max_states())
         self.action_space = ActionSpace(range(2))
 
+        print('In this environment, actions 0=no marketing action, 1=marketing action')
+        print('Marketing actions will only work in a range of possible steps.')
+        
         self.max_steps = max_steps
         self.cost_marketing_action = cost_marketing_action
         self.elig_min, self.elig_max = self.cust.get_eligibility_window()
@@ -49,12 +52,13 @@ class SimpleMarketingEnv(Environment):
         # moves to next state.  If the customer suddenly died that happens here
         # this assumes that the system knows the customer has died! which is not true in reality.
         self.s = self.cust.get_next_state(s_prev)
-        if action == 0:
-            # no marketing action
-            reward = 0
-        else:
+        # no marketing action
+        reward = 0
+        if action==1:
             # Marketing action
             reward = - self.cost_marketing_action
+            
+            # additional reward may occur; and reset to state 0
             mkt_reward = self.cust.get_reward(self.s)
             if mkt_reward > 0:
                 reward += mkt_reward
@@ -96,7 +100,7 @@ class SimpleMarketingEnv(Environment):
             #
             # color area where one can market
             #
-            maze[0, self.elig_min:self.elig_max+1] = .8
+            maze[0, self.elig_min:self.elig_max] = .8
             
             #
             # color the agent: where are they located

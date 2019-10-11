@@ -155,12 +155,15 @@ class Experiment(object):
         
         # if not interactive display, show graph at the end
         if not interactive:
+            #print('not interactive')
             self.fig.clf()
             stats = plotting.EpisodeStats(
                 episode_lengths=self.episode_length,
                 episode_rewards=self.episode_reward,
                 episode_running_variance=np.zeros(max_number_of_episodes))
             plotting.plot_episode_stats(stats, display_frequency)
+            self.agent.print_final_statistics()
+            #print('final statistics printed')
         
   
     def run_qlearning(self, max_number_of_episodes=100, interactive = False, display_frequency=1):
@@ -268,3 +271,4 @@ class Experiment(object):
                 episode_rewards=self.episode_reward,
                 episode_running_variance=np.zeros(max_number_of_episodes))
             plotting.plot_episode_stats(stats, display_frequency)
+            self.agent.print_final_statistics()
