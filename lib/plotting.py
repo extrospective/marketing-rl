@@ -9,9 +9,12 @@ TimestepStats = namedtuple("Stats",["cumulative_rewards", "regrets"])
 def plot_episode_stats(stats, smoothing_window=10, hideplot=False):
     # Plot the episode length over time
     fig1 = plt.figure(figsize=(10,5))
+    avg_len = np.round(np.mean(stats.episode_lengths),2)
     plt.plot(stats.episode_lengths)
+    plt.axhline(y=avg_len, color='xkcd:black')
+
     plt.xlabel("Episode")
-    plt.ylabel("Episode Length")
+    plt.ylabel("Episode Length (mean: %f)" % avg_len)
     plt.title("Episode Length over Time")
     if hideplot:
         plt.close(fig1)
@@ -21,9 +24,15 @@ def plot_episode_stats(stats, smoothing_window=10, hideplot=False):
     # Plot the episode reward over time
     fig2 = plt.figure(figsize=(10,5))
     rewards_smoothed = pd.Series(stats.episode_rewards).rolling(smoothing_window, min_periods=smoothing_window).mean()
+    num_episodes = len(stats.episode_rewards)
+    # print('num_episodes %d' % num_episodes)  # had been thinking of using this to plot text for rewards
+    avg_rewards = np.round(np.mean(stats.episode_rewards),2)
+    # print('Average rewards: %f' % avg_rewards)
     plt.plot(rewards_smoothed)
+    plt.axhline(y=avg_rewards, color='xkcd:black')
+    #plt.text(x=0, y=avg_rewards+10, s=str(avg_rewards), color='xkcd:black')
     plt.xlabel("Episode")
-    plt.ylabel("Episode Reward (Smoothed)")
+    plt.ylabel("Episode Reward (Smoothed) (mean %f)" % avg_rewards)
     plt.title("Episode Reward over Time (Smoothed over window size {})".format(smoothing_window))
     if hideplot:
         plt.close(fig2)
