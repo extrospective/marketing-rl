@@ -54,7 +54,7 @@ class SimpleMarketingEnv(Environment):
         self.s = self.cust.get_next_state(s_prev)
         # no marketing action
         reward = 0
-        if action==1:
+        if action >= 1:
             # Marketing action
             reward = - self.cost_marketing_action
             
@@ -72,7 +72,7 @@ class SimpleMarketingEnv(Environment):
             is_reset = False
                 
         return (self._convert_state(self.s), reward, is_reset, '')
-    
+ 
     
     def reset(self):
         self.nstep = 0
@@ -134,6 +134,9 @@ class SimpleCustomerPurchase():
         self.own_purchase_prob = own_purchase_prob
         self.prob_sudden_death = prob_sudden_death
         self.dead = False
+        print('Simple customer purchase at time >= %d and <%d and ending at %d' % (tmin, tmax, tdeath))
+        print('Prob response %0.2f, gross profit response %.0f, Prob sudden death %0.2f, Own purchase prob %0.2f' %
+              (prob_response, gross_profit_response, prob_sudden_death, own_purchase_prob))
         
     def get_reward(self, t_state):
         if self.dead:
@@ -158,7 +161,9 @@ class SimpleCustomerPurchase():
     
     
     def get_death(self, t_state):
+        #print('checking get_death')
         if t_state >= self.tdeath:
+            #print('state >= tdeath, tstate %d tdeath %d' % (t_state, self.tdeath))
             self.dead = False  # resurrect for next customer
             return True
         return False
@@ -190,6 +195,7 @@ class CustomerPurchaseVariable(SimpleCustomerPurchase):
                                                        own_purchase_prob=own_purchase_prob,
                                                        prob_sudden_death=prob_sudden_death)
         self.gross_profit_response_max = gross_profit_response_max
+        print('Subclass CustomerPurchaseVariable gross profit max %.0f' % gross_profit_response_max)
         
     def get_gross_profit(self):
         spend = random.randint(0, self.gross_profit_response_max)

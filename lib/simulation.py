@@ -6,13 +6,15 @@ from matplotlib import pylab
 import matplotlib.gridspec as gridspec
 
 class Experiment(object):
-    def __init__(self, env, agent):
+    def __init__(self, env, agent, show_episode_length=True, show_episode_reward=True):
         
         self.env = env
         self.agent = agent
         
         self.episode_length = np.array([0])
         self.episode_reward = np.array([0])
+        self.show_episode_reward = show_episode_reward
+        self.show_episode_length = show_episode_length
         
         self.fig = pylab.figure(figsize=(10, 8))
         gs = gridspec.GridSpec(3, 1)
@@ -48,8 +50,10 @@ class Experiment(object):
         self.ax2.set_xlim(0, max(10, len(self.episode_reward)+1))
         self.ax2.set_ylim(0, 2)
         
-        self.line, = self.ax1.plot(range(len(self.episode_length)),self.episode_length)
-        self.line2, = self.ax2.plot(range(len(self.episode_reward)),self.episode_reward)
+        if show_episode_length:
+            self.line, = self.ax1.plot(range(len(self.episode_length)),self.episode_length)
+        if show_episode_reward:
+            self.line2, = self.ax2.plot(range(len(self.episode_reward)),self.episode_reward)
         
     def update_display_step(self):
         if not hasattr(self, 'imgplot'):
@@ -60,13 +64,15 @@ class Experiment(object):
         self.fig.canvas.draw()
         
     def update_display_episode(self):  
-        self.line.set_data(range(len(self.episode_length)),self.episode_length)
-        self.ax1.set_xlim(0, max(10, len(self.episode_length)+1))
-        self.ax1.set_ylim(0, max(self.episode_length)+1)
-        
-        self.line2.set_data(range(len(self.episode_reward)),self.episode_reward)
-        self.ax2.set_xlim(0, max(10, len(self.episode_reward)+1))
-        self.ax2.set_ylim(min(self.episode_reward)-1, max(self.episode_reward)+1)
+        if self.show_episode_length:
+            self.line.set_data(range(len(self.episode_length)),self.episode_length)
+            self.ax1.set_xlim(0, max(10, len(self.episode_length)+1))
+            self.ax1.set_ylim(0, max(self.episode_length)+1)
+
+        if self.show_episode_reward:
+            self.line2.set_data(range(len(self.episode_reward)),self.episode_reward)
+            self.ax2.set_xlim(0, max(10, len(self.episode_reward)+1))
+            self.ax2.set_ylim(min(self.episode_reward)-1, max(self.episode_reward)+1)
         
         self.fig.canvas.draw()     
         
