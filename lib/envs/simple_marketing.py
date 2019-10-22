@@ -24,13 +24,16 @@ class ActionSpace(object):
         
 class SimpleMarketingEnv(Environment):
 
-    def __init__(self, customer_class, cost_marketing_action=1, max_steps = 5000):
+    def __init__(self, customer_list, cost_marketing_action=1, max_steps = 5000):
         super(SimpleMarketingEnv, self).__init__()
 
         # define state and action space
-        self.cust = customer_class
+        self.customer_list = customer_list
 
-        self.S = range(self.cust.get_max_states())
+        max_states = 0
+        for i in self.customer_list:
+            max_states = i.get_max_states() if i.get_max_states() > max_states else max_states
+        self.S = range(max_states)
         self.action_space = ActionSpace(range(2))
 
         print('In this environment, actions 0=no marketing action, 1=marketing action')
@@ -38,7 +41,6 @@ class SimpleMarketingEnv(Environment):
         
         self.max_steps = max_steps
         self.cost_marketing_action = cost_marketing_action
-        self.elig_min, self.elig_max = self.cust.get_eligibility_window()
 
         
     def step(self, action):
@@ -78,6 +80,9 @@ class SimpleMarketingEnv(Environment):
         self.nstep = 0
         self.s = 0
         self.is_reset = True
+        #
+        # This is the magic of selecting a customer - but not leaking into environment:
+        self.cust = self.customer_list[random.randint(0, len(self.customer_list)-1)]
         return self._convert_state(self.s)
     
     
@@ -96,10 +101,11 @@ class SimpleMarketingEnv(Environment):
             
             # default 1's: yellow
             # default 0's: purple
-            maze = np.ones((1, self.cust.get_max_states()))
+            maze = np.ones((2, self.shape[1]))
             #
             # color area where one can market
             #
+            self.elig_min, self.elig_max = self.cust.get_eligibility_window()
             maze[0, self.elig_min:self.elig_max] = .8
             
             #
@@ -114,17 +120,17 @@ class SimpleMarketingEnv(Environment):
             
 class TwoValueMarketingEnv(Environment):
 
-    def __init__(self, customer_class, cost_marketing_action=1, p_initial_high=0.3, 
+    def __init__(self, customer_list, cost_marketing_action=1, p_initial_high=0.3, 
                  p_low_to_high=0.5, p_high_to_low=0.1, max_steps=5000):
         super(TwoValueMarketingEnv, self).__init__()
 
         # define state and action space
-        self.cust = customer_class
+        self.customer_list = customer_list
         self.cost_marketing_action = cost_marketing_action
         self.p_initial_high = p_initial_high
         self.p_low_to_high = p_low_to_high
         self.p_high_to_low = p_high_to_low
-        
+                
         #
         # Normally one would ask the agent to contain the "guess" about the customer
         # In this experiment we are asking what would happen if the environment presented
@@ -144,7 +150,14 @@ class TwoValueMarketingEnv(Environment):
         #
         # HighValueState = state where customer is believed to be a high value customer
         # LowValueState = state where customer is believe to be a low value customer  
-        self.shape = (2, self.cust.get_max_states())
+        
+        # 
+        # state is maximum of any customer.  although we do not ensure what happens in the customer class with different
+        # numbers of states are passed in.
+        max_states = 0
+        for i in self.customer_list:
+            max_states = i.get_max_states() if i.get_max_states() > max_states else max_states
+        self.shape = (2, max_states)
         self.S = np.zeros(self.shape, dtype=np.bool)
         #
         # still two actions: market or do not market at time T
@@ -154,7 +167,6 @@ class TwoValueMarketingEnv(Environment):
         print('Marketing actions will only work in a range of possible steps.')
         print('Additionally there are high value and low value states provided by the environment')
         self.max_steps = max_steps
-        self.elig_min, self.elig_max = self.cust.get_eligibility_window()
         self.reset()
         
     def _convert_state(self, state):
@@ -189,13 +201,13 @@ class TwoValueMarketingEnv(Environment):
                 self.s = 0
                 if self.is_low == 1:
                     if random.random() < self.p_low_to_high:
-                        print('moved to high')
+                        #print('moved to high')
                         self.is_low = 0
             else:
                 # not purchased.  may transition from high to low
                 if self.is_low == 0:
                     if random.random() < self.p_high_to_low:
-                        print('moved to low')
+                        #print('moved to low')
                         self.is_low = 1
 
         # Are we at the end for the customer lifetime?
@@ -209,10 +221,21 @@ class TwoValueMarketingEnv(Environment):
  
     
     def reset(self):
+        #
+        # Each pass through a different customer is selected
+        # But the agent is not given any indication from state which type of customer it is
+        # This simple model tries to simply model states based on customer behavior rather than leak any
+        # atual customer state into the environment.
         self.nstep = 0
         self.s = 0
         self.is_reset = True
         
+        #
+        # This is the magic of selecting a customer - but not leaking into environment:
+        self.cust = self.customer_list[random.randint(0, len(self.customer_list)-1)]
+        
+        #
+        # This is the independent setting of state in the environment
         # randomize high/low
         self.is_low = 0 if random.random() < self.p_initial_high else 1
         return self._convert_state(self.s, self.is_low)
@@ -234,8 +257,10 @@ class TwoValueMarketingEnv(Environment):
             # default 0's: purple
             maze = np.ones((2, self.shape[1]))
             #
-            # color area where one can market
+            # color area where one can market: note could cause flickering if different for customers
+            # maybe in future the likelihood of response factors into the color too.
             #
+            self.elig_min, self.elig_max = self.cust.get_eligibility_window()
             maze[:, self.elig_min:self.elig_max] = .8
             
             #
