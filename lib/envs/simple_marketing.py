@@ -33,6 +33,7 @@ class SimpleMarketingEnv(Environment):
         max_states = 0
         for i in self.customer_list:
             max_states = i.get_max_states() if i.get_max_states() > max_states else max_states
+        self.shape = (1, max_states)
         self.S = range(max_states)
         self.action_space = ActionSpace(range(2))
 
@@ -274,10 +275,27 @@ class TwoValueMarketingEnv(Environment):
 
             
 
-class SimpleCustomerPurchase():
+            
+class Customer():
     
-    def __init__(self, tdeath=11, tmin=5, tmax=10, prob_response=0.2, gross_profit_response=100, own_purchase_prob=0,
-                prob_sudden_death=0.001):
+    def __init__(self, gross_profit_min, gross_profit_max):
+        self.gross_profit_min = gross_profit_min
+        self.gross_profit_max = gross_profit_max
+        
+    def get_gross_profit(self):
+        spend = random.randint(self.gross_profit_min, self.gross_profit_max)
+        return spend
+
+           
+        
+class CustomerInventoryDriven(Customer):
+    """
+    CustomerInventoryDriven -- a customer who responds in time window after purchase only
+    """
+    def __init__(self, gross_profit_min=50, gross_profit_max=200, tdeath=11, tmin=5, tmax=10, prob_response=0.2,  
+                 own_purchase_prob=0,
+                 prob_sudden_death=0.001):
+        super().__init__(gross_profit_min, gross_profit_max)
         """
         tmin: min time for open to marketing action
         tmax: one past time open to marketing action
@@ -288,17 +306,13 @@ class SimpleCustomerPurchase():
             (customer which responds with purchase does not also make its own purchase)
         prob_sudden_death: probability that customer dies in current state and all built up value is gone
         """
+        self.tdeath = tdeath
         self.tmin = tmin
         self.tmax = tmax
-        self.tdeath = tdeath
         self.prob_response = prob_response
-        self.gross_profit_response = gross_profit_response
         self.own_purchase_prob = own_purchase_prob
         self.prob_sudden_death = prob_sudden_death
         self.dead = False
-        print('Simple customer purchase at time >= %d and <%d and ending at %d' % (tmin, tmax, tdeath))
-        print('Prob response %0.2f, gross profit response %.0f, Prob sudden death %0.2f, Own purchase prob %0.2f' %
-              (prob_response, gross_profit_response, prob_sudden_death, own_purchase_prob))
         
     def get_reward(self, t_state):
         if self.dead:
@@ -316,10 +330,6 @@ class SimpleCustomerPurchase():
 
         # default: no purchase
         return 0
-    
-    
-    def get_gross_profit(self):
-        return self.gross_profit_response
     
     
     def get_death(self, t_state):
@@ -346,20 +356,5 @@ class SimpleCustomerPurchase():
     def get_eligibility_window(self):
         return (self.tmin, self.tmax)
     
-    
-class CustomerPurchaseVariable(SimpleCustomerPurchase):
-    
-    def __init__(self, tdeath, tmin, tmax, prob_response, own_purchase_prob, gross_profit_response_max, prob_sudden_death):
-        """
-        gross_profit_response_max - maximum amount of GP from order drawn from stochastic distribution (uniform)
-        """
-        super(CustomerPurchaseVariable, self).__init__(tdeath, tmin, tmax, prob_response, 
-                                                       own_purchase_prob=own_purchase_prob,
-                                                       prob_sudden_death=prob_sudden_death)
-        self.gross_profit_response_max = gross_profit_response_max
-        print('Subclass CustomerPurchaseVariable gross profit max %.0f' % gross_profit_response_max)
+
         
-    def get_gross_profit(self):
-        spend = random.randint(0, self.gross_profit_response_max)
-        # print(spend)
-        return spend
