@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from itertools import cycle
 
 ### Interface
 class Environment(object):
@@ -29,7 +30,8 @@ class SimpleMarketingEnv(Environment):
 
         # define state and action space
         self.customer_list = customer_list
-
+        self.customer_list_cycle = cycle(customer_list)
+        
         max_states = 0
         for i in self.customer_list:
             max_states = i.get_max_states() if i.get_max_states() > max_states else max_states
@@ -82,8 +84,8 @@ class SimpleMarketingEnv(Environment):
         self.s = 0
         self.is_reset = True
         #
-        # This is the magic of selecting a customer - but not leaking into environment:
-        self.cust = self.customer_list[random.randint(0, len(self.customer_list)-1)]
+        # cycle through customers one at a time
+        self.cust = next(self.customer_list_cycle)
         return self._convert_state(self.s)
     
     
