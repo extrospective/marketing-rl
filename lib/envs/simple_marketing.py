@@ -129,6 +129,7 @@ class TwoValueMarketingEnv(Environment):
 
         # define state and action space
         self.customer_list = customer_list
+        self.customer_list_cycle = cycle(customer_list)
         self.cost_marketing_action = cost_marketing_action
         self.p_initial_high = p_initial_high
         self.p_low_to_high = p_low_to_high
