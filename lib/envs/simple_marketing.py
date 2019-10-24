@@ -234,8 +234,8 @@ class TwoValueMarketingEnv(Environment):
         self.is_reset = True
         
         #
-        # This is the magic of selecting a customer - but not leaking into environment:
-        self.cust = self.customer_list[random.randint(0, len(self.customer_list)-1)]
+        # cycle through customers one at a time
+        self.cust = next(self.customer_list_cycle)
         
         #
         # This is the independent setting of state in the environment

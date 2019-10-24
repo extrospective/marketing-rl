@@ -222,7 +222,8 @@ class Experiment(object):
                 episode_rewards=self.episode_reward,
                 episode_running_variance=np.zeros(max_number_of_episodes))
             plotting.plot_episode_stats(stats, display_frequency)
-            
+            return stats
+        
     def run_sarsa(self, max_number_of_episodes=100, interactive = False, display_frequency=1):
 
         # repeat for each episode
@@ -278,3 +279,4 @@ class Experiment(object):
                 episode_running_variance=np.zeros(max_number_of_episodes))
             plotting.plot_episode_stats(stats, display_frequency)
             self.agent.print_final_statistics()
+            return stats
